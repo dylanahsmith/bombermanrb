@@ -1,0 +1,3 @@
+module Bomberman
+  VERSION = '0.0.1'
+end

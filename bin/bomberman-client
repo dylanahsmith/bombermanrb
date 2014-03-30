@@ -1,0 +1,30 @@
+#!/usr/bin/env ruby
+$LOAD_PATH << File.expand_path("../../lib", __FILE__)
+require 'socket'
+require 'curses'
+require 'thread'
+require 'bomberman'
+
+host = ARGV.shift || 'localhost'
+port = ARGV.shift || 40000
+
+socket = TCPSocket.new(host, port)
+
+Curses.init_screen
+Curses.nonl
+Curses.cbreak
+Curses.noecho
+
+state = Bomberman::GameState.new
+view = Bomberman::GameView.new(state)
+Thread.new do
+  begin
+    state.loop(socket)
+  rescue => e
+    Curses.addstr "#{e.class}: #{e.message}\n"
+    Curses.refresh
+  end
+  $exit = true
+end
+Bomberman::KeyboardInput.new(socket).loop
+$exit = true
