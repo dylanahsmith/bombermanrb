@@ -15,16 +15,19 @@ Curses.nonl
 Curses.cbreak
 Curses.noecho
 
-state = Bomberman::GameState.new
+state = Bomberman::GameState.new(socket)
 view = Bomberman::GameView.new(state)
-Thread.new do
+thread = Thread.new do
   begin
-    state.loop(socket)
+    state.loop
   rescue => e
-    Curses.addstr "#{e.class}: #{e.message}\n"
-    Curses.refresh
+    STDERR.print "#{e.class}: #{e.message}\r\n"
+    STDERR.print e.backtrace.join("\r\n") + "\r\n"
+    STDERR.print "\r\n"
+    abort
   end
   $exit = true
 end
-Bomberman::KeyboardInput.new(socket).loop
+Bomberman::Keyboard.new(socket).loop
 $exit = true
+thread.join

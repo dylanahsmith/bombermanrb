@@ -1,5 +1,5 @@
 module Bomberman
-  class Input
+  class Controller
     def initialize(socket)
       @socket = socket
     end

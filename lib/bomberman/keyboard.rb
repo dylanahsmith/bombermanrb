@@ -1,7 +1,7 @@
 require 'curses'
 
 module Bomberman
-  class KeyboardInput < Input
+  class Keyboard < Controller
     def initialize(*args)
       super
       Curses.stdscr.keypad = true

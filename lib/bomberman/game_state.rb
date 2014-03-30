@@ -3,13 +3,15 @@ require 'multi_json'
 
 module Bomberman
   class GameState
-    attr_accessor :mutex, :turn, :turn_duration, :player_name, :x, :y,
+    attr_accessor :mutex
+    attr_accessor :turn, :turn_duration, :player_name, :x, :y,
                   :last_x, :last_y, :bombs, :max_bombs, :bomb_radius, :alive,
                   :board, :game_object, :message
 
-    def initialize
+    def initialize(io)
       @mutex = Mutex.new
       @watchers = []
+      @io = io
     end
 
     def watch(watcher)
@@ -20,10 +22,17 @@ module Bomberman
       @watchers.each(&:call)
     end
 
-    def read(io)
-      line = io.readline
+    def next_turn
+      state = read or return false
+      update(state)
+      notify_watchers
+      true
+    end
+
+    def read
+      line = @io.readline
       return nil unless line
-      if (c = io.readchar) != "\n"
+      if (c = @io.readchar) != "\n"
         abort("Improperly terminated server message (expected \"\n\" got #{c.inspect}")
       end
       MultiJson.load(line)
@@ -48,10 +57,9 @@ module Bomberman
       end
     end
 
-    def loop(io)
-      while !$exit and state = read(io)
-        update(state)
-        notify_watchers
+    def loop
+      until $exit
+        next_turn || break
       end
     end
   end
